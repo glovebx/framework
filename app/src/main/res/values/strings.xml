@@ -11,4 +11,12 @@
     <string name="label_log_note">Log note</string>
     <string name="label_send_message"><u>Send a message</u></string>
     <string name="label_log_an_internal_note"><u>Log an internal note</u></string>
+
+    <string name="configuration_required">Initial configuration required</string>
+    <string name="change_appId">Change application Id</string>
+    <string name="not_allowed_appId">Not allowed \'com.odoo\'</string>
+    <string name="change_appName">Change application Name</string>
+    <string name="not_allowed_appName">Not allowed \'Odoo\'</string>
+    <string name="config_notes">Note : This dialog disappear if framework meet different configuration</string>
+
 </resources>

@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:padding="@dimen/default_8dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:src="@drawable/odoo_mobile_large" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:fontFamily="@string/font_light"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="@string/configuration_required" />
+    </LinearLayout>
+
+    <View style="@style/ViewSeparator" />
+
+    <LinearLayout
+        android:padding="@dimen/default_8dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/img_done_appId"
+                android:padding="4dp"
+                android:src="@drawable/ic_action_action_done_all"
+                android:background="@drawable/icon_bg_oval_green"
+                android:layout_width="wrap_content"
+                android:tint="#ffffff"
+                android:layout_margin="8dp"
+                android:layout_height="wrap_content" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:paddingLeft="10dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:fontFamily="@string/font_normal"
+                    android:layout_width="match_parent"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/body_text_2"
+                    android:text="@string/change_appId" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:fontFamily="@string/font_condensed"
+                    android:textColor="@color/body_text_3"
+                    android:layout_height="wrap_content"
+                    android:text="@string/not_allowed_appId" />
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/img_help_appId"
+                android:tint="@color/android_blue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/default_4dp"
+                android:src="@drawable/ic_action_help" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/default_4dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/img_done_appName"
+                android:padding="4dp"
+                android:src="@drawable/ic_action_navigation_close"
+                android:background="@drawable/icon_bg_oval_red"
+                android:layout_width="wrap_content"
+                android:tint="#ffffff"
+                android:layout_margin="8dp"
+                android:layout_height="wrap_content" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:paddingLeft="10dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:fontFamily="@string/font_normal"
+                    android:layout_width="match_parent"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/body_text_2"
+                    android:text="@string/change_appName" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:fontFamily="@string/font_condensed"
+                    android:textColor="@color/body_text_3"
+                    android:layout_height="wrap_content"
+                    android:text="@string/not_allowed_appName" />
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/img_help_appName"
+                android:tint="@color/android_blue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/default_4dp"
+                android:src="@drawable/ic_action_help" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <View style="@style/ViewSeparator" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/default_8dp"
+        android:textColor="@color/body_text_3"
+        android:fontFamily="@string/font_normal"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:gravity="center_horizontal"
+        android:text="@string/config_notes" />
+</LinearLayout>

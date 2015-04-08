@@ -19,7 +19,9 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.odoo.App;
 import com.odoo.OdooActivity;
+import com.odoo.R;
 import com.odoo.base.addons.res.ResCompany;
 import com.odoo.core.auth.OdooAccountManager;
 import com.odoo.core.auth.OdooAuthenticator;
@@ -32,7 +34,6 @@ import com.odoo.core.support.OdooUserLoginSelectorDialog;
 import com.odoo.core.utils.IntentUtils;
 import com.odoo.core.utils.OAlertDialog;
 import com.odoo.core.utils.OResource;
-import com.odoo.R;
 import com.odoo.datas.OConstants;
 
 import java.util.ArrayList;
@@ -62,11 +63,21 @@ public class OdooLogin extends ActionBarActivity implements View.OnClickListener
     private List<String> databases = new ArrayList<String>();
     private TextView mLoginProcessStatus = null;
     private TextView mTermsCondition;
+    private AlertDialog dialog;
+    private App app = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.base_login);
+        app = (App) getApplicationContext();
+        OdooConfigDialog configDialog = new OdooConfigDialog(this);
+        dialog = configDialog.build();
+        dialog.show();
+        String packageId = app.getPackageName();
+        String app_name = app.getPackageManager().getApplicationLabel(app.getApplicationInfo()).toString();
+
+
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
             if (extras.containsKey(OdooAuthenticator.KEY_NEW_ACCOUNT_REQUEST))
