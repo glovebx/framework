@@ -42,7 +42,9 @@
             </intent-filter>
         </activity>
         <activity android:name="com.odoo.core.account.ManageAccounts" />
-        <activity android:name="com.odoo.OdooActivity" android:label="${applicationName}" />
+        <activity
+            android:name="com.odoo.OdooActivity"
+            android:label="${applicationName}" />
         <activity android:name="odoo.controls.SearchableItemActivity" />
         <activity android:name="com.odoo.SettingsActivity" />
         <activity
@@ -69,7 +71,7 @@
                 <action android:name="odoo.Odoo.ACTION_ODOO_UPDATES" />
             </intent-filter>
         </receiver>
-        
+
         <receiver android:name=".server.notifications.OdooServerNotificationReceiver">
             <intent-filter>
                 <action android:name="${applicationId}.odoo.mobile.SERVER_NOTIFICATION" />
@@ -101,6 +103,20 @@
             android:authorities="${applicationId}.core.provider.content.sync.res_partner"
             android:label="@string/sync_label_customers"
             android:multiprocess="true" />
+        <provider
+            android:name=".addons.projects.providers.ProjectTaskProvider"
+            android:authorities="com.odoo.addons.projects.project_tasks"
+            android:multiprocess="true"
+            android:label="ProjectTask" />
+        <service android:name=".addons.projects.services.ProjectTaskSyncService"
+            android:exported="true"
+            android:process=":project_task">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter"
+                android:resource="@xml/project_task_adapter"/>
+            </service>
 
         <service
             android:name="com.odoo.addons.customers.services.CustomerSyncService"
