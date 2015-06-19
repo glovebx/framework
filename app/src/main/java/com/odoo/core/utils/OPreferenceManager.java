@@ -84,4 +84,7 @@ public class OPreferenceManager {
         return mPref.getBoolean(key, defValue);
     }
 
+    public boolean contains(String key) {
+        return mPref.contains(key);
+    }
 }

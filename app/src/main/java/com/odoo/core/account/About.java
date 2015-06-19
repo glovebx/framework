@@ -44,6 +44,7 @@ public class About extends ActionBarActivity implements View.OnClickListener {
     private Handler handler = null;
     private int click_count = 0;
     private Runnable runnable = null;
+    private  OPreferenceManager pref =null;
 
 
     @Override
@@ -87,7 +88,7 @@ public class About extends ActionBarActivity implements View.OnClickListener {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_about, menu);
-        OPreferenceManager pref = new OPreferenceManager(this);
+        pref = new OPreferenceManager(this);
         if (pref.getBoolean(DEVELOPER_MODE, false)) {
             menu.findItem(R.id.menu_developer_mode).setVisible(true);
         }
@@ -127,10 +128,10 @@ public class About extends ActionBarActivity implements View.OnClickListener {
             handler.postDelayed(runnable, 7000);
         }
         click_count = click_count + 1;
-        if (click_count == 3) {
+        if (click_count == 3 && pref.getBoolean(DEVELOPER_MODE, false)== false) {
             Toast.makeText(this, R.string.developer_2_tap, Toast.LENGTH_SHORT).show();
         }
-        if (click_count == 5) {
+        if (click_count == 5 && pref.getBoolean(DEVELOPER_MODE, false)== false) {
             OPreferenceManager pref = new OPreferenceManager(this);
             pref.setBoolean(DEVELOPER_MODE, true);
             Toast.makeText(this, R.string.developer_5_tap, Toast.LENGTH_SHORT).show();

@@ -24,10 +24,12 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
@@ -36,6 +38,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -63,6 +66,7 @@ import com.odoo.core.utils.BitmapUtils;
 import com.odoo.core.utils.OActionBarUtils;
 import com.odoo.core.utils.OAlert;
 import com.odoo.core.utils.OControls;
+import com.odoo.core.utils.ODateUtils;
 import com.odoo.core.utils.OFragmentUtils;
 import com.odoo.core.utils.OPreferenceManager;
 import com.odoo.core.utils.OResource;
@@ -86,6 +90,8 @@ public class OdooActivity extends AppCompatActivity {
     public static final Integer REQUEST_ACCOUNT_CREATE = 1101;
     public static final Integer REQUEST_ACCOUNTS_MANAGE = 1102;
     public static final String KEY_FRESH_LOGIN = "key_fresh_login";
+    private static final String REMIND_ON= "remind_on", COUNTER_ACTIVE_STATE= "counter_active_time",
+        REMIND_LATER ="remind_later", FIRST_LOGIN_DATE="first_login_date";
 
     private DrawerLayout mDrawerLayout = null;
     private ActionBarDrawerToggle mDrawerToggle = null;
@@ -162,6 +168,7 @@ public class OdooActivity extends AppCompatActivity {
                 });
             }
         }
+        appRating();
     }
 
     // Creating drawer
@@ -647,4 +654,54 @@ public class OdooActivity extends AppCompatActivity {
         setupDrawerBox();
     }
 
+    private void appRating() {
+        OPreferenceManager prefManager = new OPreferenceManager(this);
+        prefManager.putInt(COUNTER_ACTIVE_STATE, prefManager.getInt(COUNTER_ACTIVE_STATE, 0) + 1);
+        if (!prefManager.contains(FIRST_LOGIN_DATE)) {
+            prefManager.putString(FIRST_LOGIN_DATE, ODateUtils.getDate(
+                    ODateUtils.DEFAULT_DATE_FORMAT));
+        }
+        String dayBefore = ODateUtils.getDate(
+                ODateUtils.createDateObject(ODateUtils.getDateBefore(3),
+                        ODateUtils.DEFAULT_DATE_FORMAT, true), ODateUtils.DEFAULT_DATE_FORMAT);
+        Boolean firstRating = prefManager.getString(FIRST_LOGIN_DATE, "").equals(dayBefore);
+        if (firstRating && prefManager.getBoolean(REMIND_LATER, false) == false) {
+            rateDialog();
+        } else if (prefManager.getBoolean(REMIND_LATER, false) == true &&
+                prefManager.getInt(COUNTER_ACTIVE_STATE, 0) == prefManager.getInt(REMIND_ON, 0)) {
+            rateDialog();
+        }
+    }
+
+    private void rateDialog() {
+        final OPreferenceManager preferenceManager = new OPreferenceManager(this);
+        AlertDialog.Builder ratingDialog = new AlertDialog.Builder(this);
+        ratingDialog.setTitle(R.string.rateApp);
+        ratingDialog.setMessage(R.string.label_rating_message);
+        ratingDialog.setIcon(R.drawable.ic_odoo_o);
+        ratingDialog.setView(R.layout.rating_dialog);
+        ratingDialog.setCancelable(false);
+        ratingDialog.setPositiveButton(R.string.rateNow, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                App app = (App) getApplicationContext();
+
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" +
+                        app.getPackageName()));
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+            }
+
+        });
+        ratingDialog.setNegativeButton(R.string.remindLater, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                preferenceManager.setBoolean(REMIND_LATER, true);
+                preferenceManager.putInt(REMIND_ON, preferenceManager.
+                        getInt(COUNTER_ACTIVE_STATE, 0) + 5);
+            }
+
+        });
+        ratingDialog.create().show();
+    }
 }
