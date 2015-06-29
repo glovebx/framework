@@ -90,8 +90,11 @@ public class OdooActivity extends AppCompatActivity {
     public static final Integer REQUEST_ACCOUNT_CREATE = 1101;
     public static final Integer REQUEST_ACCOUNTS_MANAGE = 1102;
     public static final String KEY_FRESH_LOGIN = "key_fresh_login";
-    private static final String REMIND_ON= "remind_on", COUNTER_ACTIVE_STATE= "counter_active_time",
-        REMIND_LATER ="remind_later", FIRST_LOGIN_DATE="first_login_date";
+    private static final String REMIND_ON = "remind_on";
+    private static final String COUNTER_ACTIVE_STATE = "counter_active_time";
+    private static final String REMIND_LATER = "remind_later";
+    private static final String FIRST_LOGIN_DATE = "first_login_date";
+    private static final String DATE_AFTER_3Day = "date_after_3day";
 
     private DrawerLayout mDrawerLayout = null;
     private ActionBarDrawerToggle mDrawerToggle = null;
@@ -130,10 +133,12 @@ public class OdooActivity extends AppCompatActivity {
         /* Validating package
             com.odoo not allowed, App name Odoo also not allowed
          */
-        validatePackage();
+//        validatePackage();
 
         // Validating user object
         validateUserObject();
+        appRating();
+
     }
 
     private void validatePackage() {
@@ -168,7 +173,6 @@ public class OdooActivity extends AppCompatActivity {
                 });
             }
         }
-        appRating();
     }
 
     // Creating drawer
@@ -658,13 +662,17 @@ public class OdooActivity extends AppCompatActivity {
         OPreferenceManager prefManager = new OPreferenceManager(this);
         prefManager.putInt(COUNTER_ACTIVE_STATE, prefManager.getInt(COUNTER_ACTIVE_STATE, 0) + 1);
         if (!prefManager.contains(FIRST_LOGIN_DATE)) {
-            prefManager.putString(FIRST_LOGIN_DATE, ODateUtils.getDate(
-                    ODateUtils.DEFAULT_DATE_FORMAT));
+            prefManager.putString(FIRST_LOGIN_DATE, ODateUtils.getDate(ODateUtils.
+                    DEFAULT_DATE_FORMAT));
+            prefManager.putString(DATE_AFTER_3Day, ODateUtils.
+                    getDate(ODateUtils.createDateObject(ODateUtils.
+                                    getDateBefore(-3), ODateUtils.DEFAULT_DATE_FORMAT, true),
+                            ODateUtils.DEFAULT_DATE_FORMAT));
         }
-        String dayBefore = ODateUtils.getDate(
-                ODateUtils.createDateObject(ODateUtils.getDateBefore(3),
-                        ODateUtils.DEFAULT_DATE_FORMAT, true), ODateUtils.DEFAULT_DATE_FORMAT);
-        Boolean firstRating = prefManager.getString(FIRST_LOGIN_DATE, "").equals(dayBefore);
+
+        Boolean firstRating = prefManager.
+                getString(DATE_AFTER_3Day, "").equals(ODateUtils.getDate(ODateUtils.
+                DEFAULT_DATE_FORMAT));
         if (firstRating && prefManager.getBoolean(REMIND_LATER, false) == false) {
             rateDialog();
         } else if (prefManager.getBoolean(REMIND_LATER, false) == true &&

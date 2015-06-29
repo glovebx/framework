@@ -5,8 +5,8 @@ android {
     compileSdkVersion 22
     buildToolsVersion "21.1.2"
     defaultConfig {
-        manifestPlaceholders = [applicationName : "Odoo"]
-        applicationId "com.odoo"
+        manifestPlaceholders = [applicationName : "OdooTest"]
+        applicationId "com.odoo.test"
         minSdkVersion 14
         targetSdkVersion 22
         versionCode 4
