@@ -1,20 +1,20 @@
 /**
  * Odoo, Open Source Management Solution
  * Copyright (C) 2012-today Odoo SA (<http:www.odoo.com>)
- *
+ * <p/>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version
- *
+ * <p/>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details
- *
+ * <p/>
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http:www.gnu.org/licenses/>
- *
+ * <p/>
  * Created on 30/12/14 3:28 PM
  */
 package com.odoo.addons.customers;
@@ -63,7 +63,6 @@ public class Customers extends BaseFragment implements ISyncStatusObserverListen
     public static final String EXTRA_KEY_TYPE = "extra_key_type";
     private View mView;
     private String mCurFilter = null;
-    private ListView mPartnersList = null;
     private OCursorListAdapter mAdapter = null;
     private boolean syncRequested = false;
 
@@ -87,7 +86,7 @@ public class Customers extends BaseFragment implements ISyncStatusObserverListen
         setHasSwipeRefreshView(view, R.id.swipe_container, this);
         mView = view;
         mType = Type.valueOf(getArguments().getString(EXTRA_KEY_TYPE));
-        mPartnersList = (ListView) view.findViewById(R.id.listview);
+        ListView mPartnersList = (ListView) view.findViewById(R.id.listview);
         mAdapter = new OCursorListAdapter(getActivity(), null, R.layout.customer_row_item);
         mAdapter.setOnViewBindListener(this);
         mAdapter.setHasSectionIndexers(true, "name");
@@ -96,6 +95,7 @@ public class Customers extends BaseFragment implements ISyncStatusObserverListen
         mPartnersList.setOnItemClickListener(this);
         setHasFloatingButton(view, R.id.fabButton, mPartnersList, this);
         getLoaderManager().initLoader(0, null, this);
+
     }
 
     @Override
@@ -149,7 +149,7 @@ public class Customers extends BaseFragment implements ISyncStatusObserverListen
                 public void run() {
                     OControls.setGone(mView, R.id.loadingProgress);
                     OControls.setVisible(mView, R.id.swipe_container);
-                    OControls.setGone(mView, R.id.customer_no_items);
+                    OControls.setGone(mView, R.id.data_list_no_item);
                     setHasSwipeRefreshView(mView, R.id.swipe_container, Customers.this);
                 }
             }, 500);
@@ -159,8 +159,8 @@ public class Customers extends BaseFragment implements ISyncStatusObserverListen
                 public void run() {
                     OControls.setGone(mView, R.id.loadingProgress);
                     OControls.setGone(mView, R.id.swipe_container);
-                    OControls.setVisible(mView, R.id.customer_no_items);
-                    setHasSwipeRefreshView(mView, R.id.customer_no_items, Customers.this);
+                    OControls.setVisible(mView, R.id.data_list_no_item);
+                    setHasSwipeRefreshView(mView, R.id.data_list_no_item, Customers.this);
                     OControls.setImage(mView, R.id.icon, R.drawable.ic_action_customers);
                     OControls.setText(mView, R.id.title, _s(R.string.label_no_customer_found));
                     OControls.setText(mView, R.id.subTitle, "");
@@ -264,10 +264,11 @@ public class Customers extends BaseFragment implements ISyncStatusObserverListen
     }
 
     private void loadActivity(ODataRow row) {
-        Bundle data = null;
+        Bundle data = new Bundle();
         if (row != null) {
             data = row.getPrimaryBundleData();
         }
+        data.putString(CustomerDetails.KEY_PARTNER_TYPE, mType.toString());
         IntentUtils.startActivity(getActivity(), CustomerDetails.class, data);
     }
 

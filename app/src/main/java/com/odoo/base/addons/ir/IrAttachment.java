@@ -1,20 +1,20 @@
 /**
  * Odoo, Open Source Management Solution
  * Copyright (C) 2012-today Odoo SA (<http:www.odoo.com>)
- *
+ * <p/>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version
- *
+ * <p/>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details
- *
+ * <p/>
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http:www.gnu.org/licenses/>
- *
+ * <p/>
  * Created on 31/12/14 12:41 PM
  */
 package com.odoo.base.addons.ir;
@@ -28,12 +28,14 @@ import com.odoo.core.orm.fields.OColumn;
 import com.odoo.core.orm.fields.types.OInteger;
 import com.odoo.core.orm.fields.types.OText;
 import com.odoo.core.orm.fields.types.OVarchar;
+import com.odoo.core.rpc.helper.ODomain;
+import com.odoo.core.rpc.helper.ORecordValues;
+import com.odoo.core.rpc.helper.OdooFields;
+import com.odoo.core.rpc.helper.utils.gson.OdooRecord;
+import com.odoo.core.rpc.helper.utils.gson.OdooResult;
 import com.odoo.core.support.OUser;
 
-import odoo.helper.ODomain;
-import odoo.helper.ORecordValues;
-import odoo.helper.OdooFields;
-import odoo.helper.utils.gson.OdooRecord;
+import java.util.ArrayList;
 
 
 public class IrAttachment extends OModel {
@@ -92,9 +94,10 @@ public class IrAttachment extends OModel {
         domain.add("id", "=", selectServerId(row_id));
         OdooFields fields = new OdooFields();
         fields.addAll(new String[]{"datas"});
-        OdooRecord result = getServerDataHelper().read(fields, selectServerId(row_id));
-        if (result != null) {
-            return result.getString("datas");
+        OdooResult result = getServerDataHelper().read(fields, selectServerId(row_id));
+        if (result != null && result.has("result") && result.get("result") instanceof ArrayList) {
+            OdooRecord res = (OdooRecord) result.getArray("result").get(0);
+            return res.getString("datas");
         }
         return "false";
     }

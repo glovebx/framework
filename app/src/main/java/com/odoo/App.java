@@ -25,27 +25,36 @@ import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
-import com.odoo.datas.OConstants;
+import com.odoo.core.orm.ModelRegistryUtils;
+import com.odoo.core.orm.OModel;
+import com.odoo.core.orm.OSQLite;
+import com.odoo.core.rpc.Odoo;
+import com.odoo.core.support.OUser;
 
+import java.lang.reflect.Constructor;
 import java.util.HashMap;
-
-import odoo.Odoo;
-import odoo.helper.OUser;
 
 public class App extends Application {
 
     public static final String TAG = App.class.getSimpleName();
-    public static String APPLICATION_ID;
     public static String APPLICATION_NAME;
     private static HashMap<String, Odoo> mOdooInstances = new HashMap<>();
+    private static HashMap<String, OSQLite> mSQLiteObjecs = new HashMap<>();
+    private static ModelRegistryUtils modelRegistryUtils = new ModelRegistryUtils();
 
     @Override
     public void onCreate() {
         super.onCreate();
-        App.APPLICATION_ID= getPackageName();
         App.APPLICATION_NAME = getPackageManager().getApplicationLabel(getApplicationInfo()).toString();
-        Odoo.REQUEST_TIMEOUT_MS = OConstants.RPC_REQUEST_TIME_OUT;
-        Odoo.DEFAULT_MAX_RETRIES = OConstants.RPC_REQUEST_RETRIES;
+        App.modelRegistryUtils.makeReady(getApplicationContext());
+    }
+
+    public static OSQLite getSQLite(String userName) {
+        return mSQLiteObjecs.containsKey(userName) ? mSQLiteObjecs.get(userName) : null;
+    }
+
+    public static void setSQLite(String userName, OSQLite sqLite) {
+        mSQLiteObjecs.put(userName, sqLite);
     }
 
     public Odoo getOdoo(OUser user) {
@@ -91,5 +100,22 @@ public class App extends Application {
             e.printStackTrace();
         }
         return mInstalled;
+    }
+
+    public static <T> T getModel(Context context, String modelName, OUser user) {
+        Class<? extends OModel> modelCls = App.modelRegistryUtils.getModel(modelName);
+        if (modelCls != null) {
+            try {
+                Constructor constructor = modelCls.getConstructor(Context.class, OUser.class);
+                return (T) constructor.newInstance(context, user);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
+
+    public ModelRegistryUtils getModelRegistry() {
+        return modelRegistryUtils;
     }
 }

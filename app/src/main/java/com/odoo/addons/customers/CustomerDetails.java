@@ -1,38 +1,34 @@
 /**
  * Odoo, Open Source Management Solution
  * Copyright (C) 2012-today Odoo SA (<http:www.odoo.com>)
- *
+ * <p/>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version
- *
+ * <p/>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details
- *
+ * <p/>
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http:www.gnu.org/licenses/>
- *
+ * <p/>
  * Created on 8/1/15 5:47 PM
  */
 package com.odoo.addons.customers;
 
 import android.content.Intent;
 import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.GradientDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
+import android.support.design.widget.CollapsingToolbarLayout;
+import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.odoo.App;
@@ -44,61 +40,76 @@ import com.odoo.core.orm.ODataRow;
 import com.odoo.core.orm.OModel;
 import com.odoo.core.orm.OValues;
 import com.odoo.core.orm.fields.OColumn;
+import com.odoo.core.rpc.helper.OdooFields;
+import com.odoo.core.rpc.helper.utils.gson.OdooResult;
+import com.odoo.core.support.OdooCompatActivity;
 import com.odoo.core.utils.BitmapUtils;
 import com.odoo.core.utils.IntentUtils;
-import com.odoo.core.utils.OActionBarUtils;
+import com.odoo.core.utils.OAlert;
+import com.odoo.core.utils.OResource;
 import com.odoo.core.utils.OStringColorUtil;
-import com.odoo.widgets.parallax.ParallaxScrollView;
 
 import odoo.controls.OField;
 import odoo.controls.OForm;
-import odoo.helper.OdooFields;
-import odoo.helper.utils.gson.OdooRecord;
 
-public class CustomerDetails extends AppCompatActivity
+public class CustomerDetails extends OdooCompatActivity
         implements View.OnClickListener, OField.IOnFieldValueChangeListener {
     public static final String TAG = CustomerDetails.class.getSimpleName();
+    public static String KEY_PARTNER_TYPE = "partner_type";
     private final String KEY_MODE = "key_edit_mode";
     private final String KEY_NEW_IMAGE = "key_new_image";
-    private ActionBar actionBar;
     private Bundle extras;
     private ResPartner resPartner;
     private ODataRow record = null;
-    private ParallaxScrollView parallaxScrollView;
-    private ImageView userImage = null, captureImage = null;
-    private TextView mTitleView = null;
+    private ImageView userImage = null;
     private OForm mForm;
     private App app;
     private Boolean mEditMode = false;
     private Menu mMenu;
     private OFileManager fileManager;
     private String newImage = null;
+    private CollapsingToolbarLayout collapsingToolbarLayout;
+    private Toolbar toolbar;
+    private Customers.Type partnerType = Customers.Type.Customer;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.customer_detail);
-        OActionBarUtils.setActionBar(this, false);
+
+        collapsingToolbarLayout = (CollapsingToolbarLayout) findViewById(R.id.customer_collapsing_toolbar);
+
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+
+        userImage = (ImageView) findViewById(R.id.user_image);
+        findViewById(R.id.captureImage).setOnClickListener(this);
+
         fileManager = new OFileManager(this);
-        actionBar = getSupportActionBar();
-        actionBar.setTitle("");
+        if (toolbar != null)
+            collapsingToolbarLayout.setTitle("");
         if (savedInstanceState != null) {
             mEditMode = savedInstanceState.getBoolean(KEY_MODE);
             newImage = savedInstanceState.getString(KEY_NEW_IMAGE);
         }
         app = (App) getApplicationContext();
-        parallaxScrollView = (ParallaxScrollView) findViewById(R.id.parallaxScrollView);
-        parallaxScrollView.setActionBar(actionBar);
-        userImage = (ImageView) findViewById(android.R.id.icon);
-        mTitleView = (TextView) findViewById(android.R.id.title);
         resPartner = new ResPartner(this, null);
         extras = getIntent().getExtras();
-        if (extras == null)
+        if (hasRecordInExtra())
+            partnerType = Customers.Type.valueOf(extras.getString(KEY_PARTNER_TYPE));
+        if (!hasRecordInExtra())
             mEditMode = true;
-        setupActionBar();
+        setupToolbar();
+    }
+
+    private boolean hasRecordInExtra() {
+        return extras != null && extras.containsKey(OColumn.ROW_ID);
     }
 
     private void setMode(Boolean edit) {
+        findViewById(R.id.captureImage).setVisibility(edit ? View.VISIBLE : View.GONE);
         if (mMenu != null) {
             mMenu.findItem(R.id.menu_customer_detail_more).setVisible(!edit);
             mMenu.findItem(R.id.menu_customer_edit).setVisible(!edit);
@@ -110,33 +121,27 @@ public class CustomerDetails extends AppCompatActivity
             color = OStringColorUtil.getStringColor(this, record.getString("name"));
         }
         if (edit) {
-            if (extras != null)
-                actionBar.setTitle(R.string.label_edit);
-            else
-                actionBar.setTitle(R.string.label_new);
-            actionBar.setBackgroundDrawable(new ColorDrawable(color));
+            if (!hasRecordInExtra()) {
+                collapsingToolbarLayout.setTitle("New");
+            }
             mForm = (OForm) findViewById(R.id.customerFormEdit);
-            captureImage = (ImageView) findViewById(R.id.captureImage);
-            captureImage.setOnClickListener(this);
-            userImage = (ImageView) findViewById(android.R.id.icon1);
-            findViewById(R.id.parallaxScrollView).setVisibility(View.GONE);
-            findViewById(R.id.customerScrollViewEdit).setVisibility(View.VISIBLE);
+            findViewById(R.id.customer_view_layout).setVisibility(View.GONE);
+            findViewById(R.id.customer_edit_layout).setVisibility(View.VISIBLE);
             OField is_company = (OField) findViewById(R.id.is_company_edit);
             is_company.setOnValueChangeListener(this);
         } else {
-            actionBar.setBackgroundDrawable(getResources().getDrawable(R.drawable.action_bar_shade));
-            userImage = (ImageView) findViewById(android.R.id.icon);
             mForm = (OForm) findViewById(R.id.customerForm);
-            findViewById(R.id.customerScrollViewEdit).setVisibility(View.GONE);
-            findViewById(R.id.parallaxScrollView).setVisibility(View.VISIBLE);
+            findViewById(R.id.customer_edit_layout).setVisibility(View.GONE);
+            findViewById(R.id.customer_view_layout).setVisibility(View.VISIBLE);
         }
         setColor(color);
     }
 
-    private void setupActionBar() {
-        if (extras == null) {
+    private void setupToolbar() {
+        if (!hasRecordInExtra()) {
             setMode(mEditMode);
             userImage.setColorFilter(Color.parseColor("#ffffff"));
+            userImage.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
             mForm.setEditable(mEditMode);
             mForm.initForm(null);
         } else {
@@ -147,7 +152,7 @@ public class CustomerDetails extends AppCompatActivity
             setMode(mEditMode);
             mForm.setEditable(mEditMode);
             mForm.initForm(record);
-            mTitleView.setText(record.getString("name"));
+            collapsingToolbarLayout.setTitle(record.getString("name"));
             setCustomerImage();
             if (record.getInt("id") != 0 && record.getString("large_image").equals("false")) {
                 BigImageLoader bigImageLoader = new BigImageLoader();
@@ -189,9 +194,9 @@ public class CustomerDetails extends AppCompatActivity
     }
 
     private void setCustomerImage() {
-        if (!record.getString("image_small").equals("false")) {
+
+        if (record != null && !record.getString("image_small").equals("false")) {
             userImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            userImage.setColorFilter(null);
             String base64 = newImage;
             if (newImage == null) {
                 if (!record.getString("large_image").equals("false")) {
@@ -202,33 +207,35 @@ public class CustomerDetails extends AppCompatActivity
             }
             userImage.setImageBitmap(BitmapUtils.getBitmapImage(this, base64));
         } else {
-            userImage.setColorFilter(Color.parseColor("#ffffff"));
+            userImage.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+            userImage.setColorFilter(Color.WHITE);
+            int color = OStringColorUtil.getStringColor(this, record.getString("name"));
+            userImage.setBackgroundColor(color);
         }
     }
 
     private void setColor(int color) {
-        FrameLayout frameLayout = (FrameLayout) findViewById(R.id.parallax_view);
-        frameLayout.setBackgroundColor(color);
-        parallaxScrollView.setParallaxOverLayColor(color);
-        parallaxScrollView.setBackgroundColor(color);
         mForm.setIconTintColor(color);
-        findViewById(R.id.parallax_view).setBackgroundColor(color);
-        findViewById(R.id.parallax_view_edit).setBackgroundColor(color);
-        findViewById(R.id.customerScrollViewEdit).setBackgroundColor(color);
-        if (captureImage != null) {
-            GradientDrawable shapeDrawable =
-                    (GradientDrawable) getResources().getDrawable(R.drawable.circle_mask_primary);
-            shapeDrawable.setColor(color);
-            captureImage.setBackgroundDrawable(shapeDrawable);
-        }
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                break;
             case R.id.menu_customer_save:
                 OValues values = mForm.getValues();
                 if (values != null) {
+                    switch (partnerType) {
+                        case Supplier:
+                            values.put("customer", "false");
+                            values.put("supplier", "true");
+                            break;
+                        default:
+                            values.put("customer", "true");
+                            break;
+                    }
                     if (newImage != null) {
                         values.put("image_small", newImage);
                         values.put("large_image", newImage);
@@ -237,9 +244,8 @@ public class CustomerDetails extends AppCompatActivity
                         resPartner.update(record.getInt(OColumn.ROW_ID), values);
                         Toast.makeText(this, R.string.toast_information_saved, Toast.LENGTH_LONG).show();
                         mEditMode = !mEditMode;
-                        setupActionBar();
+                        setupToolbar();
                     } else {
-                        values.put("customer", "true");
                         final int row_id = resPartner.insert(values);
                         if (row_id != OModel.INVALID_ROW_ID) {
                             finish();
@@ -248,22 +254,40 @@ public class CustomerDetails extends AppCompatActivity
                 }
                 break;
             case R.id.menu_customer_cancel:
-                if (record == null) {
-                    finish();
-                    return true;
-                }
             case R.id.menu_customer_edit:
-                mEditMode = !mEditMode;
-                setMode(mEditMode);
-                mForm.setEditable(mEditMode);
-                mForm.initForm(record);
-                setCustomerImage();
+                if (hasRecordInExtra()) {
+                    mEditMode = !mEditMode;
+                    setMode(mEditMode);
+                    mForm.setEditable(mEditMode);
+                    mForm.initForm(record);
+                    setCustomerImage();
+                } else {
+                    finish();
+                }
                 break;
             case R.id.menu_customer_share:
                 ShareUtil.shareContact(this, record, true);
                 break;
             case R.id.menu_customer_import:
                 ShareUtil.shareContact(this, record, false);
+                break;
+            case R.id.menu_customer_delete:
+                OAlert.showConfirm(this, OResource.string(this,
+                        R.string.confirm_are_you_sure_want_to_delete),
+                        new OAlert.OnAlertConfirmListener() {
+                            @Override
+                            public void onConfirmChoiceSelect(OAlert.ConfirmType type) {
+                                if (type == OAlert.ConfirmType.POSITIVE) {
+                                    // Deleting record and finishing activity if success.
+                                    if (resPartner.delete(record.getInt(OColumn.ROW_ID))) {
+                                        Toast.makeText(CustomerDetails.this, R.string.toast_record_deleted,
+                                                Toast.LENGTH_SHORT).show();
+                                        finish();
+                                    }
+                                }
+                            }
+                        });
+
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -286,7 +310,6 @@ public class CustomerDetails extends AppCompatActivity
         }
     }
 
-
     private class BigImageLoader extends AsyncTask<Integer, Void, String> {
 
         @Override
@@ -296,8 +319,8 @@ public class CustomerDetails extends AppCompatActivity
                 Thread.sleep(300);
                 OdooFields fields = new OdooFields();
                 fields.addAll(new String[]{"image_medium"});
-                OdooRecord record = resPartner.getServerDataHelper().read(null, params[0]);
-                if (!record.getString("image_medium").equals("false")) {
+                OdooResult record = resPartner.getServerDataHelper().read(null, params[0]);
+                if (record != null && !record.getString("image_medium").equals("false")) {
                     image = record.getString("image_medium");
                 }
             } catch (Exception e) {

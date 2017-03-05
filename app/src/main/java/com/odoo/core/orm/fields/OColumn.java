@@ -1,23 +1,27 @@
 /**
  * Odoo, Open Source Management Solution
  * Copyright (C) 2012-today Odoo SA (<http:www.odoo.com>)
- *
+ * <p/>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version
- *
+ * <p/>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details
- *
+ * <p/>
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http:www.gnu.org/licenses/>
- *
+ * <p/>
  * Created on 31/12/14 11:20 AM
  */
 package com.odoo.core.orm.fields;
+
+import com.odoo.core.orm.OModel;
+import com.odoo.core.orm.annotation.Odoo;
+import com.odoo.core.orm.fields.utils.DomainFilterParser;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -30,6 +34,7 @@ public class OColumn {
     public static final String TAG = OColumn.class.getSimpleName();
     public static final String ROW_ID = "_id";
     private LinkedHashMap<String, String> mSelectionMap = new LinkedHashMap<>();
+    private Odoo.Domain domainFilter;
 
     public static enum RelationType {
         OneToMany,
@@ -58,6 +63,11 @@ public class OColumn {
     private Boolean functional_store = false;
     private String[] functional_store_depends = null;
     private String syncColumnName = null;
+
+    // Custom table name and custom column names for many to many type column
+    private String rel_table_name = null;
+    private String rel_base_column = null;
+    private String rel_relation_column = null;
 
     public OColumn(String label, Class<?> type) {
         this.label = label;
@@ -176,9 +186,6 @@ public class OColumn {
     }
 
     public LinkedHashMap<String, ColumnDomain> getDomains() {
-        if (hasDomainFilterColumn()) {
-            return new LinkedHashMap<>();
-        }
         return columnDomains;
     }
 
@@ -189,6 +196,10 @@ public class OColumn {
     public OColumn setHasDomainFilterColumn(Boolean domainFilterColumn) {
         mHasDomainFilterColumn = domainFilterColumn;
         return this;
+    }
+
+    public void setDomainFilter(Odoo.Domain domainFilter) {
+        this.domainFilter = domainFilter;
     }
 
     public boolean hasOnChange() {
@@ -215,8 +226,11 @@ public class OColumn {
         columnDomains.clear();
     }
 
-    public LinkedHashMap<String, ColumnDomain> getFilterDomains() {
-        return columnDomains;
+    public DomainFilterParser getDomainFilterParser(OModel model) {
+        if (domainFilter != null) {
+            return new DomainFilterParser(model, this, domainFilter.value());
+        }
+        return null;
     }
 
     /**
@@ -312,6 +326,33 @@ public class OColumn {
         return getName();
     }
 
+    public String getRelTableName() {
+        return rel_table_name;
+    }
+
+    public OColumn setRelTableName(String tableName) {
+        this.rel_table_name = tableName;
+        return this;
+    }
+
+    public String getRelBaseColumn() {
+        return rel_base_column;
+    }
+
+    public OColumn setRelBaseColumn(String rel_base_column) {
+        this.rel_base_column = rel_base_column;
+        return this;
+    }
+
+    public String getRelRelationColumn() {
+        return rel_relation_column;
+    }
+
+    public OColumn setRelRelationColumn(String rel_relation_column) {
+        this.rel_relation_column = rel_relation_column;
+        return this;
+    }
+
     @Override
     public String toString() {
         return "OColumn{" +
@@ -339,7 +380,7 @@ public class OColumn {
                 '}';
     }
 
-    public class ColumnDomain {
+    public static class ColumnDomain {
 
         private String column = null;
         private String operator = null;

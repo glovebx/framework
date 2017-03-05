@@ -12,17 +12,14 @@
     <uses-permission android:name="android.permission.MANAGE_ACCOUNTS" />
     <uses-permission android:name="android.permission.READ_SYNC_SETTINGS" />
     <uses-permission android:name="android.permission.READ_SYNC_STATS" />
-    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.MANAGE_DOCUMENTS" />
+    <uses-permission android:name="android.permission.CAMERA" />
 
-    <permission
-        android:name="${applicationId}.permission.C2D_MESSAGE"
-        android:protectionLevel="signature" />
 
     <application
         android:name="com.odoo.App"
@@ -42,7 +39,9 @@
             </intent-filter>
         </activity>
         <activity android:name="com.odoo.core.account.ManageAccounts" />
-        <activity android:name="com.odoo.OdooActivity" android:label="${applicationName}" />
+        <activity
+            android:name="com.odoo.OdooActivity"
+            android:label="${applicationName}" />
         <activity android:name="odoo.controls.SearchableItemActivity" />
         <activity android:name="com.odoo.SettingsActivity" />
         <activity
@@ -55,26 +54,15 @@
             android:name=".base.addons.mail.widget.MailChatterCompose"
             android:theme="@style/Theme.AppCompat.Light.Dialog" />
         <activity
-            android:windowSoftInputMode="adjustPan"
             android:name="com.odoo.core.account.OdooAccountQuickManage"
-            android:theme="@style/Theme.AppCompat.Light.Dialog" />
+            android:theme="@style/Theme.AppCompat.Light.Dialog"
+            android:windowSoftInputMode="adjustPan" />
         <activity android:name="com.odoo.core.account.About" />
         <activity android:name="com.odoo.core.account.Profile" />
 
         <!-- Reminder Receivers// -->
         <receiver android:name="com.odoo.core.utils.reminder.ReminderReceiver" />
         <receiver android:name="com.odoo.core.utils.reminder.ReminderActionReceiver" />
-        <receiver android:name=".news.OdooNewsReceiver">
-            <intent-filter>
-                <action android:name="odoo.Odoo.ACTION_ODOO_UPDATES" />
-            </intent-filter>
-        </receiver>
-        
-        <receiver android:name=".server.notifications.OdooServerNotificationReceiver">
-            <intent-filter>
-                <action android:name="${applicationId}.odoo.mobile.SERVER_NOTIFICATION" />
-            </intent-filter>
-        </receiver>
 
         <service android:name="com.odoo.core.auth.OdooAuthService">
             <intent-filter>
@@ -89,10 +77,6 @@
         <provider
             android:name="com.odoo.core.orm.provider.BaseModelProvider"
             android:authorities="${applicationId}.core.provider.content"
-            android:multiprocess="true" />
-        <provider
-            android:name="com.odoo.base.addons.ir.providers.IrModelProvider"
-            android:authorities="${applicationId}.core.provider.content.sync.ir_model"
             android:multiprocess="true" />
 
         <!-- Sync Provider & Service  // -->

@@ -20,9 +20,10 @@
 package com.odoo.base.addons.res;
 
 import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 
-import com.odoo.App;
+import com.odoo.BuildConfig;
 import com.odoo.core.orm.ODataRow;
 import com.odoo.core.orm.OModel;
 import com.odoo.core.orm.OValues;
@@ -38,7 +39,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ResPartner extends OModel {
-    public static final String AUTHORITY = App.APPLICATION_ID +
+    public static final String AUTHORITY = BuildConfig.APPLICATION_ID +
             ".core.provider.content.sync.res_partner";
 
     OColumn name = new OColumn("Name", OVarchar.class).setSize(100).setRequired();
@@ -55,6 +56,9 @@ public class ResPartner extends OModel {
     OColumn company_id = new OColumn("Company", ResCompany.class, OColumn.RelationType.ManyToOne);
     OColumn parent_id = new OColumn("Related Company", ResPartner.class, OColumn.RelationType.ManyToOne)
             .addDomain("is_company", "=", true);
+
+    @Odoo.Domain("[['country_id', '=', @country_id]]")
+    OColumn state_id = new OColumn("State", ResCountryState.class, OColumn.RelationType.ManyToOne);
     OColumn country_id = new OColumn("Country", ResCountry.class, OColumn.RelationType.ManyToOne);
     OColumn customer = new OColumn("Customer", OBoolean.class).setDefaultValue("true");
     OColumn supplier = new OColumn("Supplier", OBoolean.class).setDefaultValue("false");
@@ -63,6 +67,12 @@ public class ResPartner extends OModel {
     OColumn company_name = new OColumn("Company Name", OVarchar.class).setSize(100)
             .setLocalColumn();
     OColumn large_image = new OColumn("Image", OBlob.class).setDefaultValue("false").setLocalColumn();
+
+    OColumn category_id = new OColumn("Tags", ResPartnerCategory.class,
+            OColumn.RelationType.ManyToMany);
+
+    OColumn child_ids = new OColumn("Contacts", ResPartner.class, OColumn.RelationType.OneToMany)
+            .setRelatedColumn("parent_id");
 
     public ResPartner(Context context, OUser user) {
         super(context, "res.partner", user);
@@ -108,5 +118,10 @@ public class ResPartner extends OModel {
         if (!row.getString("zip").equals("false"))
             add += " - " + row.getString("zip") + " ";
         return add;
+    }
+
+    @Override
+    public void onModelUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        // Execute upgrade script
     }
 }

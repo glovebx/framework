@@ -1,30 +1,30 @@
 /**
  * Odoo, Open Source Management Solution
  * Copyright (C) 2012-today Odoo SA (<http:www.odoo.com>)
- *
+ * <p/>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version
- *
+ * <p/>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details
- *
+ * <p/>
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http:www.gnu.org/licenses/>
- *
+ * <p/>
  * Created on 7/1/15 5:11 PM
  */
 package odoo.controls;
 
-import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -40,13 +40,14 @@ import com.odoo.core.orm.ODataRow;
 import com.odoo.core.orm.OModel;
 import com.odoo.core.orm.ServerDataHelper;
 import com.odoo.core.orm.fields.OColumn;
+import com.odoo.core.rpc.helper.ODomain;
+import com.odoo.core.rpc.helper.OdooFields;
 import com.odoo.core.support.list.OListAdapter;
 import com.odoo.core.utils.OControls;
 import com.odoo.core.utils.OResource;
 
 import java.util.ArrayList;
 import java.util.List;
-
 
 public class SearchableItemActivity extends ActionBarActivity implements
         AdapterView.OnItemClickListener, TextWatcher, View.OnClickListener,
@@ -64,8 +65,8 @@ public class SearchableItemActivity extends ActionBarActivity implements
     private OModel mRelModel = null;
     private Integer mRowId = null;
     private LiveSearch mLiveDataLoader = null;
-    private OColumn mCol = null;
-    private AlertDialog.Builder builder;
+    private Bundle formData;
+    private ODomain liveDomain = new ODomain();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,10 +107,14 @@ public class SearchableItemActivity extends ActionBarActivity implements
                 }
             } else {
                 if (extra.containsKey("column_name")) {
-                    mCol = mModel.getColumn(extra.getString("column_name"));
+                    OColumn mCol = mModel.getColumn(extra.getString("column_name"));
                     mRelModel = mModel.createInstance(mCol.getType());
-                    objects.addAll(OSelectionField.getRecordItems(mRelModel,
-                            mCol));
+
+                    if (mCol.hasDomainFilterColumn()) {
+                        formData = extra.getBundle("form_data");
+                        liveDomain = mCol.getDomainFilterParser(mModel).getRPCDomain(formData);
+                    }
+                    objects.addAll(OSelectionField.getRecordItems(mRelModel, mCol, formData));
                 }
             }
 
@@ -160,12 +165,15 @@ public class SearchableItemActivity extends ActionBarActivity implements
 
     @Override
     public void onRecordCreated(ODataRow row) {
+        Bundle extra = getIntent().getExtras();
         Intent intent = new Intent("searchable_value_select");
+        if (extra.containsKey("column_name"))
+            intent.putExtra("column_name", extra.getString("column_name"));
         intent.putExtra("selected_position", row.getInt(OColumn.ROW_ID));
         if (mRowId != null) {
             intent.putExtra("record_id", true);
         }
-        sendBroadcast(intent);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
         finish();
     }
 
@@ -228,20 +236,14 @@ public class SearchableItemActivity extends ActionBarActivity implements
         protected List<ODataRow> doInBackground(String... params) {
             try {
                 ServerDataHelper helper = mRelModel.getServerDataHelper();
-//                ODomain domain = new ODomain();
-//                domain.add(mRelModel.getDefaultNameColumn(), "ilike", params[0]);
-//                if (mCol != null) {
-//                    for (String key : mCol.getDomains().keySet()) {
-//                        OColumn.ColumnDomain dom = mCol.getDomains().get(key);
-//                        domain.add(dom.getColumn(), dom.getOperator(),
-//                                dom.getValue());
-//                    }
-//                }
-//                OdooFields fields = new OdooFields(mRelModel.getColumns());
-//                return helper.searchRecords(fields, domain, 10);
+                ODomain domain = new ODomain();
+                domain.add(mRelModel.getDefaultNameColumn(), "ilike", params[0]);
+                domain.append(liveDomain);
+                return helper.searchRecords(new OdooFields(mRelModel.getColumns()), domain, 10);
             } catch (Exception e) {
                 e.printStackTrace();
             }
+
             return null;
         }
 
